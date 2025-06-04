@@ -56,7 +56,7 @@ def run_tests():
             # Count passed/failed tests from output
             lines = result.stdout.split('\n')
             for line in lines:
-                if 'passed' in line and 'failed' in line:
+                if ' failed' in line and ' passed' in line:
                     # Parse line like "2 failed, 3 passed in 0.05s"
                     parts = line.split()
                     for i, part in enumerate(parts):
@@ -64,12 +64,18 @@ def run_tests():
                             total_passed += int(parts[i-1])
                         elif part == 'failed':
                             total_failed += int(parts[i-1])
-                elif line.strip().endswith('passed'):
+                elif line.strip().endswith('passed') and 'failed' not in line:
                     # Parse line like "5 passed in 0.05s"
                     parts = line.split()
                     for i, part in enumerate(parts):
                         if part == 'passed':
                             total_passed += int(parts[i-1])
+                elif line.strip().endswith('failed') and 'passed' not in line:
+                    # Parse line like "5 failed in 0.05s"
+                    parts = line.split()
+                    for i, part in enumerate(parts):
+                        if part == 'failed':
+                            total_failed += int(parts[i-1])
             
         except Exception as e:
             print(f"❌ Error running {test_file}: {e}")
