@@ -56,26 +56,28 @@ def run_tests():
             # Count passed/failed tests from output
             lines = result.stdout.split('\n')
             for line in lines:
-                if ' failed' in line and ' passed' in line:
+                # Look for summary line like "14 failed in 0.23s" or "2 failed, 3 passed in 0.05s"
+                if ' failed' in line and ' passed' in line and ' in ' in line:
                     # Parse line like "2 failed, 3 passed in 0.05s"
-                    parts = line.split()
-                    for i, part in enumerate(parts):
-                        if part == 'passed':
-                            total_passed += int(parts[i-1])
-                        elif part == 'failed':
-                            total_failed += int(parts[i-1])
-                elif line.strip().endswith('passed') and 'failed' not in line:
+                    import re
+                    failed_match = re.search(r'(\d+) failed', line)
+                    passed_match = re.search(r'(\d+) passed', line)
+                    if failed_match:
+                        total_failed += int(failed_match.group(1))
+                    if passed_match:
+                        total_passed += int(passed_match.group(1))
+                elif ' failed' in line and ' passed' not in line and ' in ' in line:
+                    # Parse line like "14 failed in 0.23s"
+                    import re
+                    failed_match = re.search(r'(\d+) failed', line)
+                    if failed_match:
+                        total_failed += int(failed_match.group(1))
+                elif ' passed' in line and ' failed' not in line and ' in ' in line:
                     # Parse line like "5 passed in 0.05s"
-                    parts = line.split()
-                    for i, part in enumerate(parts):
-                        if part == 'passed':
-                            total_passed += int(parts[i-1])
-                elif line.strip().endswith('failed') and 'passed' not in line:
-                    # Parse line like "5 failed in 0.05s"
-                    parts = line.split()
-                    for i, part in enumerate(parts):
-                        if part == 'failed':
-                            total_failed += int(parts[i-1])
+                    import re
+                    passed_match = re.search(r'(\d+) passed', line)
+                    if passed_match:
+                        total_passed += int(passed_match.group(1))
             
         except Exception as e:
             print(f"❌ Error running {test_file}: {e}")
